@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Infinite High Fives — an EasyPageX experiment</title>
+<meta name="description" content="Every scroll gives you another high five from an increasingly ridiculous cast of characters. A playful demo by EasyPageX.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:ital,wght@0,400;0,600;0,800;1,700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #FFF6E6;
+    --bg-card: #FFFDF8;
+    --ink: #2B1B12;
+    --ink-soft: #6b4d38;
+    --pink: #FF3E7F;
+    --yellow: #FFC93C;
+    --sky: #3FBFE0;
+    --green: #58B87E;
+    --purple: #9A6BFF;
+    --orange: #FF8A3D;
+    --coral: #FF6B6B;
+    --shadow: rgba(43,27,18,0.14);
+  }
+
+  *{box-sizing:border-box; margin:0; padding:0;}
+
+  html{scroll-behavior:smooth;}
+
+  body{
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Nunito', sans-serif;
+    overflow-x: hidden;
+  }
+
+  h1,h2,h3, .display{
+    font-family: 'Fredoka', sans-serif;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+
+  a{color:inherit;}
+
+  /* ---------- Counter badge ---------- */
+  #counter-badge{
+    position: fixed;
+    top: 18px;
+    right: 18px;
+    z-index: 500;
+    background: var(--ink);
+    color: #FFF6E6;
+    padding: 10px 18px;
+    border-radius: 999px;
+    font-family: 'Fredoka', sans-serif;
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 6px 18px var(--shadow);
+    transition: transform 0.25s cubic-bezier(.34,1.56,.64,1);
+  }
+  #counter-badge.pulse{ transform: scale(1.14) rotate(-2deg); }
+  #counter-badge span.num{
+    color: var(--yellow);
+    font-size: 1.05rem;
+  }
+
+  /* ---------- Hero ---------- */
+  .hero{
+    min-height: 100svh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 8vh 6vw;
+    position: relative;
+    background:
+      radial-gradient(circle at 20% 20%, rgba(255,201,60,0.35), transparent 45%),
+      radial-gradient(circle at 80% 75%, rgba(255,62,127,0.25), transparent 45%),
+      var(--bg);
+  }
+
+  .eyebrow{
+    font-family:'Fredoka', sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    font-size: 0.78rem;
+    color: var(--pink);
+    background: #fff;
+    border: 2px solid var(--pink);
+    padding: 6px 16px;
+    border-radius: 999px;
+    margin-bottom: 26px;
+  }
+
+  .hero h1{
+    font-size: clamp(2.6rem, 8vw, 5.6rem);
+    line-height: 1.02;
+    max-width: 14ch;
+  }
+  .hero h1 .accent{ color: var(--pink); }
+
+  .hero p.sub{
+    margin-top: 22px;
+    font-size: clamp(1.05rem, 2vw, 1.3rem);
+    max-width: 46ch;
+    color: var(--ink-soft);
+    font-weight: 600;
+  }
+
+  .hero .hand-hero{
+    font-size: clamp(4rem, 12vw, 7rem);
+    margin-top: 40px;
+    animation: floatHand 2.6s ease-in-out infinite;
+  }
+  @keyframes floatHand{
+    0%,100%{ transform: translateY(0) rotate(-6deg); }
+    50%{ transform: translateY(-16px) rotate(6deg); }
+  }
+
+  .scroll-cue{
+    margin-top: 34px;
+    font-size: 0.85rem;
+    font-weight: 800;
+    color: var(--ink-soft);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:6px;
+  }
+  .scroll-cue .arrow{ animation: bob 1.6s ease-in-out infinite; font-size: 1.2rem; }
+  @keyframes bob{ 0%,100%{transform:translateY(0);} 50%{transform:translateY(8px);} }
+
+  /* ---------- Sections ---------- */
+  .stage{
+    min-height: 100svh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    padding: 10vh 6vw;
+    overflow: hidden;
+  }
+
+  .stage-inner{
+    text-align: center;
+    max-width: 640px;
+    position: relative;
+    z-index: 3;
+  }
+
+  .index-tag{
+    font-family:'Fredoka', sans-serif;
+    font-size: 0.82rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    opacity: 0.55;
+    margin-bottom: 10px;
+  }
+
+  .stage-character{
+    font-size: clamp(5rem, 16vw, 9rem);
+    display: inline-block;
+    transform: scale(0.6) rotate(0deg);
+    opacity: 0;
+    transition: transform 0.55s cubic-bezier(.34,1.56,.64,1), opacity 0.4s ease;
+    position: relative;
+  }
+  .stage.in-view .stage-character{
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+  .stage.impact .stage-character{
+    animation: shake 0.5s ease;
+  }
+  @keyframes shake{
+    0%,100%{ transform: scale(1) rotate(0deg); }
+    20%{ transform: scale(1.12) rotate(-6deg); }
+    40%{ transform: scale(0.96) rotate(5deg); }
+    60%{ transform: scale(1.08) rotate(-3deg); }
+    80%{ transform: scale(1) rotate(2deg); }
+  }
+
+  .hand-slap{
+    display: block;
+    font-size: clamp(6rem, 18vw, 10rem);
+    opacity: 0;
+    margin: 28px auto 0;
+    transform: translateY(-60px) rotate(30deg) scale(0.5);
+  }
+  .stage.impact .hand-slap{
+    animation: slap 0.55s cubic-bezier(.2,.9,.3,1) forwards;
+  }
+  @keyframes slap{
+    0%{ opacity:0; transform: translateY(-100px) rotate(35deg) scale(0.4); }
+    55%{ opacity:1; transform: translateY(6px) rotate(-8deg) scale(1.15); }
+    75%{ transform: translateY(0) rotate(0deg) scale(1); }
+    100%{ opacity:1; transform: translateY(0) rotate(-4deg) scale(1); }
+  }
+  .hand-slap.floating{
+    opacity: 1;
+    animation: floatHand 2.6s ease-in-out infinite !important;
+  }
+
+  .impact-flash{
+    position: absolute;
+    inset: 0;
+    margin: auto;
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 1;
+    opacity: 0;
+  }
+  .stage.impact .impact-flash{
+    animation: flash 0.6s ease-out forwards;
+  }
+  @keyframes flash{
+    0%{ width:10px; height:10px; opacity:0.9; }
+    100%{ width: 620px; height:620px; opacity:0; }
+  }
+
+  .pow{
+    position: absolute;
+    top: 6%;
+    left: 50%;
+    font-family:'Fredoka', sans-serif;
+    font-weight: 700;
+    font-size: clamp(1.6rem, 4vw, 2.6rem);
+    color: var(--pink);
+    -webkit-text-stroke: 2px var(--ink);
+    opacity: 0;
+    transform: translate(-50%, 10px) rotate(-10deg) scale(0.5);
+    z-index: 4;
+  }
+  .stage.impact .pow{
+    animation: pow 0.7s cubic-bezier(.2,1.4,.4,1) forwards;
+  }
+  @keyframes pow{
+    0%{ opacity:0; transform: translate(-50%,10px) rotate(-10deg) scale(0.4); }
+    50%{ opacity:1; transform: translate(-50%,-30px) rotate(8deg) scale(1.2); }
+    100%{ opacity:1; transform: translate(-50%,-18px) rotate(-4deg) scale(1); }
+  }
+
+  .stage h2{
+    margin-top: 34px;
+    font-size: clamp(1.5rem, 4vw, 2.2rem);
+  }
+  .stage p.caption{
+    margin-top: 12px;
+    font-size: 1.05rem;
+    color: var(--ink-soft);
+    font-weight: 600;
+    max-width: 42ch;
+    margin-left:auto; margin-right:auto;
+  }
+
+  /* per-stage accent backgrounds, always light/warm */
+  .stage-1{ background: radial-gradient(circle at 50% 30%, rgba(63,191,224,0.22), transparent 55%), var(--bg); }
+  .stage-2{ background: radial-gradient(circle at 50% 30%, rgba(255,138,61,0.24), transparent 55%), var(--bg); }
+  .stage-3{ background: radial-gradient(circle at 50% 30%, rgba(255,201,60,0.28), transparent 55%), var(--bg); }
+  .stage-4{ background: radial-gradient(circle at 50% 30%, rgba(154,107,255,0.22), transparent 55%), var(--bg); }
+  .stage-5{ background: radial-gradient(circle at 50% 30%, rgba(88,184,126,0.24), transparent 55%), var(--bg); }
+  .stage-6{ background: radial-gradient(circle at 50% 30%, rgba(255,62,127,0.20), transparent 55%), var(--bg); }
+  .stage-7{ background: radial-gradient(circle at 50% 30%, rgba(255,107,107,0.22), transparent 55%), var(--bg); }
+  .stage-8{ background: radial-gradient(circle at 50% 30%, rgba(63,191,224,0.24), transparent 55%), var(--bg); }
+  .stage-9{ background: radial-gradient(circle at 50% 30%, rgba(255,201,60,0.24), transparent 55%), var(--bg); }
+  .stage-10{ background: radial-gradient(circle at 50% 30%, rgba(154,107,255,0.26), transparent 55%), var(--bg); }
+
+  .stage-1 .impact-flash{ background: radial-gradient(circle, rgba(63,191,224,0.5), transparent 70%); }
+  .stage-2 .impact-flash{ background: radial-gradient(circle, rgba(255,138,61,0.5), transparent 70%); }
+  .stage-3 .impact-flash{ background: radial-gradient(circle, rgba(255,201,60,0.55), transparent 70%); }
+  .stage-4 .impact-flash{ background: radial-gradient(circle, rgba(154,107,255,0.5), transparent 70%); }
+  .stage-5 .impact-flash{ background: radial-gradient(circle, rgba(88,184,126,0.5), transparent 70%); }
+  .stage-6 .impact-flash{ background: radial-gradient(circle, rgba(255,62,127,0.45), transparent 70%); }
+  .stage-7 .impact-flash{ background: radial-gradient(circle, rgba(255,107,107,0.5), transparent 70%); }
+  .stage-8 .impact-flash{ background: radial-gradient(circle, rgba(63,191,224,0.5), transparent 70%); }
+  .stage-9 .impact-flash{ background: radial-gradient(circle, rgba(255,201,60,0.55), transparent 70%); }
+  .stage-10 .impact-flash{ background: radial-gradient(circle, rgba(154,107,255,0.5), transparent 70%); }
+
+  /* ---------- Final CTA ---------- */
+  .finale{
+    min-height: 100svh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 10vh 6vw;
+    background: linear-gradient(180deg, var(--bg) 0%, #FFEAD1 100%);
+  }
+  .finale .infinity{
+    font-size: clamp(4rem, 12vw, 6rem);
+    margin-bottom: 14px;
+  }
+  .finale h2{
+    font-size: clamp(2rem, 6vw, 3.2rem);
+    max-width: 16ch;
+  }
+  .finale p{
+    margin-top: 16px;
+    font-size: 1.15rem;
+    color: var(--ink-soft);
+    font-weight: 600;
+    max-width: 42ch;
+  }
+  .finale .cta-row{
+    margin-top: 34px;
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .btn{
+    font-family:'Fredoka', sans-serif;
+    font-weight: 600;
+    font-size: 1rem;
+    padding: 16px 30px;
+    border-radius: 999px;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    transition: transform 0.2s cubic-bezier(.34,1.56,.64,1), box-shadow 0.2s ease;
+    box-shadow: 0 8px 0 var(--shadow);
+  }
+  .btn:hover{ transform: translateY(-3px); }
+  .btn-primary{
+    background: var(--pink);
+    color: #fff;
+  }
+  .btn-secondary{
+    background: var(--bg-card);
+    color: var(--ink);
+    border: 2px solid var(--ink);
+    box-shadow: none;
+  }
+
+  footer{
+    text-align:center;
+    padding: 32px 6vw 46px;
+    font-size: 0.85rem;
+    color: var(--ink-soft);
+    background: #FFEAD1;
+  }
+  footer a{ color: var(--pink); font-weight: 800; text-decoration: none; }
+  footer a:hover{ text-decoration: underline; }
+
+  /* Floating CTA */
+  #floating-cta{
+    position: fixed;
+    bottom: 18px;
+    left: 18px;
+    z-index: 500;
+    background: var(--ink);
+    color: #FFF6E6;
+    padding: 12px 20px;
+    border-radius: 999px;
+    font-family:'Fredoka', sans-serif;
+    font-weight: 600;
+    font-size: 0.85rem;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 6px 18px var(--shadow);
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.4s ease, transform 0.4s ease;
+  }
+  #floating-cta.show{ opacity: 1; transform: translateY(0); }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ animation: none !important; transition: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<div id="counter-badge">🖐️ <span class="num" id="counter-num">0</span> high fives given</div>
+
+<a id="floating-cta" href="https://easypagex.github.io" target="_blank" rel="noopener">🚀 Get a page like this — EasyPageX</a>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="eyebrow">An EasyPageX experiment</div>
+  <h1>Infinite <span class="accent">High Fives</span></h1>
+  <p class="sub">Keep scrolling. Every single scroll earns you a high five from someone — or something — a little more ridiculous than the last.</p>
+  <div class="hand-hero">🖐️</div>
+  <div class="scroll-cue">Start scrolling <span class="arrow">↓</span></div>
+</section>
+
+<!-- STAGE 1: ROBOT -->
+<section class="stage stage-1" data-index="1">
+  <div class="stage-inner">
+    <div class="index-tag">High five 001</div>
+    <div class="impact-flash"></div>
+    <div class="pow">BEEP-BOP!</div>
+    <span class="stage-character">🤖</span>
+    <h2>A friendly robot high-fives you.</h2>
+    <p class="caption">Servo-motors whirring, precisely calibrated for maximum high-five satisfaction.</p>
+    <span class="hand-slap">🖐️</span>
+  </div>
+</section>
+
+<!-- STAGE 2: ASTRONAUT -->
+<section class="stage stage-2" data-index="2">
+  <div class="stage-inner">
+    <div class="index-tag">High five 002</div>
+    <div class="impact-flash"></div>
+    <div class="pow">ZERO-G ZLAP!</div>
+    <span class="stage-character">👨‍🚀</span>
+    <h2>An astronaut high-fives you from orbit.</h2>
+    <p class="caption">It took 8 minutes for the light of this high five to reach your eyes. Worth it.</p>
+    <span class="hand-slap">🖐️</span>
+  </div>
+</section>
+
+<!-- STAGE 3: TACO -->
+<section class="stage stage-3" data-index="3">
+  <div class="stage-inner">
+    <div class="index-tag">High five 003</div>
+    <div class="impact-flash"></div>
+    <div class="pow">CRUNCH!</div>
+    <span class="stage-character">🌮</span>
+    <h2>A sentient taco high-fives you.</h2>
+    <p class="caption">It grew a hand specifically for this moment. Please don't ask how.</p>
+    <span class="hand-slap">🖐️</span>
+  </div>
+</section>
+
+<!-- STAGE 4: DISCO BALL -->
+<section class="stage stage-4" data-index="4">
+  <div class="stage-inner">
+    <div class="index-tag">High five 004</div>
+    <div class="impact-flash"></div>
+    <div class="pow">DISCO SMACK!</div>
+    <span class="stage-character">🕺</span>
+    <h2>A disco dancer high-fives you mid-spin.</h2>
+    <p class="caption">Perfect rhythm, perfect timing, one perfectly-placed high five.</p>
+    <span class="hand-slap">🖐️</span>
+  </div>
+</section>
+
+<!-- STAGE 5: T-REX -->
+<section class="stage stage-5" data-index="5">
+  <div class="stage-inner">
+    <div class="index-tag">High five 005</div>
+    <div class="impact-flash"></div>
+    <div class="pow">SO CLOSE!</div>
+    <span class="stage-character">🦖</span>
+    <h2>A T-Rex attempts to high-five you.</h2>
+    <p class="caption">Its arms don't quite reach. It's the thought that counts.</p>
+    <span class="hand-slap">🖐️</span>
+  </div>
+</section>
+
+<!-- STAGE 6: ALIEN -->
+<section class="stage stage-6" data-index="6">
+  <div class="stage-inner">
+    <div class="index-tag">High five 006</div>
+    <div class="impact-flash"></div>
+    <div class="pow">GRZZZORP!</div>
+    <span class="stage-character">👽</span>
+    <h2>An alien high-fives you across dimensions.</h2>
+    <p class="caption">In its language, this gesture roughly translates to "we come in peace, and also in style."</p>
+    <span class="hand-slap">🖐️</span>
+  </div>
+</section>
+
+<!-- STAGE 7: PIZZA -->
+<section class="stage stage-7" data-index="7">
+  <div class="stage-inner">
+    <div class="index-tag">High five 007</div>
+    <div class="impact-flash"></div>
+    <div class="pow">SAUCY!</div>
+    <span class="stage-character">🍕</span>
+    <h2>A slice of pizza high-fives you.</h2>
+    <p class="caption">Extra cheese, extra enthusiasm.</p>
+    <span class="hand-slap">🖐️</span>
+  </div>
+</section>
+
+<!-- STAGE 8: CACTUS -->
+<section class="stage stage-8" data-index="8">
+  <div class="stage-inner">
+    <div class="index-tag">High five 008</div>
+    <div class="impact-flash"></div>
+    <div class="pow">OUCH... WORTH IT!</div>
+    <span class="stage-character">🌵</span>
+    <h2>A cactus high-fives you. Carefully.</h2>
+    <p class="caption">It's been practicing its handshake-to-high-five ratio for weeks.</p>
+    <span class="hand-slap">🖐️</span>
+  </div>
+</section>
+
+<!-- STAGE 9: MOON -->
+<section class="stage stage-9" data-index="9">
+  <div class="stage-inner">
+    <div class="index-tag">High five 009</div>
+    <div class="impact-flash"></div>
+    <div class="pow">TIDAL SLAP!</div>
+    <span class="stage-character">🌕</span>
+    <h2>The Moon high-fives you.</h2>
+    <p class="caption">It grew an arm just for this. The tides will be weird tonight.</p>
+    <span class="hand-slap">🖐️</span>
+  </div>
+</section>
+
+<!-- STAGE 10: EASYPAGEX MASCOT -->
+<section class="stage stage-10" data-index="10">
+  <div class="stage-inner">
+    <div class="index-tag">High five 010</div>
+    <div class="impact-flash"></div>
+    <div class="pow">LEGENDARY!</div>
+    <span class="stage-character">🖐️✨</span>
+    <h2>EasyPageX itself high-fives you.</h2>
+    <p class="caption">The one who built this whole ridiculous page, right back at you.</p>
+    <span class="hand-slap">🤝</span>
+  </div>
+</section>
+
+<!-- FINALE -->
+<section class="finale">
+  <div class="infinity">♾️🖐️</div>
+  <h2>The high fives never stop. Kind of like our ideas for your landing page.</h2>
+  <p>This page is one small, silly example of what a single HTML file can do. Imagine what EasyPageX can build for your business.</p>
+  <div class="cta-row">
+    <a class="btn btn-primary" href="https://easypagex.github.io" target="_blank" rel="noopener">Visit EasyPageX →</a>
+    <a class="btn btn-secondary" href="#top" onclick="window.scrollTo({top:0,behavior:'smooth'}); return false;">Scroll back to the top ↑</a>
+  </div>
+</section>
+
+<footer>
+  © 2026 EasyPageX. Built as a playful demo — every scroll deserves a high five. <a href="https://easypagex.github.io" target="_blank" rel="noopener">easypagex.github.io</a>
+</footer>
+
+<script>
+  const counterEl = document.getElementById('counter-num');
+  const badge = document.getElementById('counter-badge');
+  const floatingCta = document.getElementById('floating-cta');
+  const stages = document.querySelectorAll('.stage');
+  const triggered = new Set();
+  const pendingTimers = new Map();
+  let count = 0;
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      const el = entry.target;
+      const idx = el.dataset.index;
+      if (entry.isIntersecting && entry.intersectionRatio > 0.45){
+        el.classList.add('in-view');
+        if (!triggered.has(idx) && !pendingTimers.has(idx)){
+          const timer = setTimeout(() => {
+            pendingTimers.delete(idx);
+            triggered.add(idx);
+            el.classList.add('impact');
+            count++;
+            counterEl.textContent = count;
+            badge.classList.add('pulse');
+            setTimeout(() => badge.classList.remove('pulse'), 300);
+            const hand = el.querySelector('.hand-slap');
+            setTimeout(() => hand.classList.add('floating'), 550);
+          }, 1000);
+          pendingTimers.set(idx, timer);
+        }
+      } else if (!entry.isIntersecting && pendingTimers.has(idx)) {
+        // scrolled away before the high five landed — cancel it
+        clearTimeout(pendingTimers.get(idx));
+        pendingTimers.delete(idx);
+      }
+      // Note: once triggered, classes are never removed — a given high five stays given.
+    });
+  }, { threshold: [0, 0.45, 0.6] });
+
+  stages.forEach(s => observer.observe(s));
+
+  // Floating CTA appears after hero
+  const hero = document.querySelector('.hero');
+  const ctaObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (!entry.isIntersecting){
+        floatingCta.classList.add('show');
+      } else {
+        floatingCta.classList.remove('show');
+      }
+    });
+  }, { threshold: 0 });
+  ctaObserver.observe(hero);
+</script>
+
+</body>
+</html>
